@@ -1,0 +1,8 @@
+source/*.json
+source/*.csv
+data/*
+node_modules
+data/*.log
+*license*
+*internal*
+logstash*
