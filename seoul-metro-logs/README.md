@@ -1,5 +1,11 @@
 # 서울 메트로 Kibana 데모
 
+seoul-metro-logs/ 경로에 `source`, `data` 디렉토리가 없는 경우 만들어 줘야 함.
+```
+mkdir source
+mkdir data
+```
+
 ## 공공 데이터 수집 
 
 서울 열린 데이터 광장 접속 : https://data.seoul.go.kr/
@@ -38,9 +44,8 @@
 npm install
 ```
 
-data 디렉토리가 없는 경우 만들어 줘야 함. 프로그램 실행.
+프로그램 실행.
 ```
-mkdir data
 node bin/run.js
 ```
 

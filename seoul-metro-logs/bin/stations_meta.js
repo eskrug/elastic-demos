@@ -5,8 +5,7 @@ var sInfo = fs.readFileSync('source/station_info.json', 'utf8');
 var sLang = fs.readFileSync('source/station_lang.json', 'utf8');
 var sLocation = JSON.parse(sInfo).DATA;
 var sNames = JSON.parse(sLang).DATA;
-// console.log(sLocation.DATA.length);
-// console.log(sLocation.length);  //DATA 부분 삭제해야 함.
+// console.log(sLocation.length);
 // console.log(sNames);
 
 //위치정보 정리

@@ -1,5 +1,4 @@
-source/*.json
-source/*.csv
+source/*
 data/*
 node_modules
 data/*.log

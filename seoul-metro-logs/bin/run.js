@@ -2,13 +2,18 @@ var fs = require('fs');
 var parse = require('csv-parse');
 var s_meta = require('./stations_meta');
 
+//분석할 파일 이름 정확히 기입
 var f1to4 = fs.readFileSync('source/metro_log_2018.csv', 'utf8');
+
 parse(f1to4, {comment:"#"}, function(csv_err, csv_data){
   if (csv_err) {
     return console.log(csv_err);
   }
-  // 날짜,호선,역번호,역명,구분,05 ~ 06,06 ~ 07,07 ~ 08,08 ~ 09,09 ~ 10,10 ~ 11,11 ~ 12,12 ~ 13,13 ~ 14,14 ~ 15,15 ~ 16,16 ~ 17,17 ~ 18,18 ~ 19,19 ~ 20,20 ~ 21,21 ~ 22,22 ~ 23,23 ~ 24,00 ~ 01,합 계
-  // 2018-01-01,1호선,150,서울역,승차,373,318,365,785,1047,1576,2510,3233,3145,2443,2980,3476,3891,3227,2945,2382,3070,1750,781,96,40393
+  
+  // csv 파일 형태는 아래와 같이 되어야 함.
+  // 0            1      2        3       4     5       6       7       ... 23      24      25
+  // 날짜,        호선,   역번호, 역명,   구분, 05~06,  06~07,  07~08,  ... 23~24,  00~01,  합계
+  // 2018-01-01,  1호선,  150,    서울역, 승차, 373,    318,    365,    ... 781,    96,     40393
 
   for(var cd=1; cd< csv_data.length ; cd+=2){
     var dataIn = csv_data[cd];
@@ -114,6 +119,8 @@ parse(f1to4, {comment:"#"}, function(csv_err, csv_data){
         // var fileName = "1to4_"+ldateTemp[0]+ldateTemp[1]+ldateTemp[2]+".log";
         //var fileName = "1to4_"+ldate.toISOString().slice(0,10).replace(/-/g,"")+".log";
         var logdata = JSON.stringify(s_logs)+"\n";
+        
+        // data 디렉토리 아래 저장할 파일 이름. data 디렉토리 없으면 생성해야 함
         fs.appendFileSync("data/seoul-metro-2018.logs", logdata);
       }
 
