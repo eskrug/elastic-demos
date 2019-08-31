@@ -38,16 +38,16 @@ for(var i = 0; i < sNames.length; i++){
     
     var stn_nm_short = "";
 
-    // 총신대입구(이수) 같은 "(" 앞 이름만 따옴
-    if(sNames[i].stn_nm.indexOf("(") > 0){
-      stn_nm_short = sNames[i].stn_nm.split("(")[0];
-    } else {
-      stn_nm_short = sNames[i].stn_nm;
-    }
-    
     // 광나루\n(장신대) 같은 줄바꿈 이름 앞 이름만 따옴.
     if(sNames[i].stn_nm.indexOf("\n") > 0){
       stn_nm_short = sNames[i].stn_nm.split("\n")[0];
+    } else {
+      stn_nm_short = sNames[i].stn_nm;
+    }
+
+    // 총신대입구(이수) 같은 "(" 앞 이름만 따옴
+    if(sNames[i].stn_nm.indexOf("(") > 0){
+      stn_nm_short = sNames[i].stn_nm.split("(")[0];
     } else {
       stn_nm_short = sNames[i].stn_nm;
     }
