@@ -178,7 +178,7 @@ DELETE south-korea-province
 
 ### Area Chart - 시간대별 지역별 확진자
 
-![Area Chart - 시간대별 지역별 확진자](time-province.PNG)
+![Area Chart - 시간대별 지역별 확진자](time-province.png)
 
 #### Matrics
 * Y-axis
@@ -196,7 +196,7 @@ DELETE south-korea-province
 
 ### Line Chart - 시간대별 확진 / 완치 / 사망자
 
-![Line Chart - 시간대별 확진 완치 사망자](time-status.PNG)
+![Line Chart - 시간대별 확진 완치 사망자](time-status.png)
 
 #### Buckets 
 * X-axis
