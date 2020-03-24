@@ -267,7 +267,7 @@ DELETE south-korea-province
 같은 내용으로 `released`, `deceased` 추가.
 
 
-## covid19-kr-patient
+## covid19-kr-patient-info
 
 > 전체 확진자의 데이터가 있지 않음. 데이터가 정확하지 않으니 Kibana 시각화 방법에 초점을 맞출 것.
 
@@ -367,3 +367,113 @@ DELETE south-korea-province
   * Field : `infection_case`
   * Size : 20
 
+## covid19-kr-patient-route
+
+* Kibana 의 파일 업로드 기능 이용 : `PatientInfo.csv`
+* Create Index pattern 체크 해제
+* Mappings
+```
+{
+  "@timestamp": {
+    "type": "date"
+  },
+  "city": {
+    "type": "keyword"
+  },
+  "date": {
+    "type": "date",
+    "format": "iso8601"
+  },
+  "global_num": {
+    "type": "short"
+  },
+  "patient_id": {
+    "type": "keyword"
+  },
+  "province": {
+    "type": "keyword"
+  },
+  "location": {
+    "type": "geo_point"
+  }
+}
+```
+
+pipeline
+```
+{
+  "description": "Ingest pipeline created by file structure finder",
+  "processors": [
+    {
+      "date": {
+        "field": "date",
+        "timezone": "{{ beat.timezone }}",
+        "formats": [
+          "ISO8601"
+        ]
+      }
+    },
+    {
+      "set": {
+        "field": "location.lat",
+        "value": "{{latitude}}"
+      }
+    },
+    {
+      "set": {
+        "field": "location.lon",
+        "value": "{{longitude}}"
+      }
+    },
+    {
+      "remove": {
+        "field": "latitude"
+      }
+    },
+    {
+      "remove": {
+        "field": "longitude"
+      }
+    }
+  ]
+}
+```
+
+### Maps - 확진자 방문지
+
+![Maps - 확진자 방문지](map-route.png)
+
+* Add Layer : Documents
+* Tooltip Fields : `date`, `global_num`
+* Layer Style : Icon : embassy
+* Fill Color : by Value : `date`
+
+### 다른 맵과 쿼리 연동되도록 ems 필드 추가
+
+* Enrich 프로세서를 적용해서 인덱스 값 업데이트
+```
+PUT covid19-kr-patient-route/_mapping
+{
+  "properties": {
+    "ems": {
+      "properties": {
+        "covid19-name": {
+          "type": "keyword"
+        },
+        "ems-name": {
+          "properties": {
+            "en": {
+              "type": "keyword"
+            },
+            "kr": {
+              "type": "keyword"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+POST covid19-kr-patient-route/_update_by_query?pipeline=covid19-province-convert
+```
