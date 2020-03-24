@@ -3,7 +3,7 @@ var parse = require('csv-parse');
 var s_meta = require('./stations_meta');
 
 //분석할 파일 이름 정확히 기입
-var f1to4 = fs.readFileSync('source/metro_log_2018.csv', 'utf8');
+var f1to4 = fs.readFileSync('source/metro_log_2017.csv', 'utf8');
 
 parse(f1to4, {comment:"#"}, function(csv_err, csv_data){
   if (csv_err) {
@@ -15,21 +15,19 @@ parse(f1to4, {comment:"#"}, function(csv_err, csv_data){
   // 날짜,        호선,   역번호, 역명,   구분, 05~06,  06~07,  07~08,  ... 23~24,  00~01,  합계
   // 2018-01-01,  1호선,  150,    서울역, 승차, 373,    318,    365,    ... 781,    96,     40393
 
+  // 2줄씩 루프 돌면서 0~3 열 까지의 데이터가 동일한지 확인
   for(var cd=1; cd< csv_data.length ; cd+=2){
     var dataIn = csv_data[cd];
     var dataOut = csv_data[cd+1];
-    if(dataIn[0]===dataOut[0] && dataIn[1]===dataOut[1] && dataIn[2]===dataOut[2] && dataIn[3]===dataOut[3]){
-      
+    if(dataIn[0]===dataOut[0] && dataIn[1]===dataOut[1] 
+      && dataIn[2]===dataOut[2] && dataIn[3]===dataOut[3]){
       // 역명
       var station_name = dataIn[3];
-      
       // 날짜
       var ldateTemp = dataIn[0].split('-');
       // 시간 값으로 루프
       for(var h=0; h < 20; h++){
         var ldate = new Date(ldateTemp[0],Number(ldateTemp[1])-1,ldateTemp[2],h);
-        // console.log(ldate);
-        
         // 승차인원
         var people_in = dataIn[5+h];
         people_in = Number(people_in);
