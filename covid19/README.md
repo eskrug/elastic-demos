@@ -230,3 +230,140 @@ DELETE south-korea-province
 * Metrics - 일별 확진자 / 일별 완치자 / 일별 사망자
   * Value axis : `RightAxis-1`
   * Chart type : `Bar`
+
+### Maps - 지역별 확진자
+
+> Timepicker 를 데이터가 있는 날짜로 조정
+
+![Maps - 지역별 확진자](map-confirm.png)
+
+* Add Layer : EMS Boundaries
+  * Layer : South Korea Provinces
+* Tooltip Fields : `name(ko)`
+* Term Joins
+  * Left field : `name(ko)`
+  * Right Source : covid19-kr-time-province
+  * Right field : `ems.ems-name.kr`
+  * and use metric
+    * Aggregation : Max
+    * Field : Confirmed
+* Layer Style
+  * Fill color : By value : 확진자수
+  * Border color : 검은색이나 적당한 색
+
+### Metric - 전체 확진 / 완치 / 사망 수
+
+![Metric - 전체 확진 / 완치 / 사망 수](metrics.png)
+
+* Aggregation : `Max Bucket`
+* Bucket : 
+  * Aggergation : `Date Historgam`
+  * Field : `@timestamp`
+  * Minimum interval : `Daily`
+* Metric : 
+  * Aggregation : `Sum`
+  * Field : `confirmed`
+
+같은 내용으로 `released`, `deceased` 추가.
+
+
+## covid19-kr-patient
+
+> 전체 확진자의 데이터가 있지 않음. 데이터가 정확하지 않으니 Kibana 시각화 방법에 초점을 맞출 것.
+
+* Kibana 의 파일 업로드 기능 이용 : `PatientInfo.csv`
+* Create Index pattern 체크 해제
+* Mappings
+```
+{
+  "age": {
+    "type": "keyword"
+  },
+  "birth_year": {
+    "type": "short"
+  },
+  "city": {
+    "type": "keyword"
+  },
+  "confirmed_date": {
+    "type": "date",
+    "format": "iso8601"
+  },
+  "contact_number": {
+    "type": "keyword"
+  },
+  "country": {
+    "type": "keyword"
+  },
+  "deceased_date": {
+    "type": "date",
+    "format": "iso8601"
+  },
+  "disease": {
+    "type": "keyword"
+  },
+  "global_num": {
+    "type": "integer"
+  },
+  "infected_by": {
+    "type": "keyword"
+  },
+  "infection_case": {
+    "type": "keyword"
+  },
+  "infection_order": {
+    "type": "byte"
+  },
+  "patient_id": {
+    "type": "keyword"
+  },
+  "province": {
+    "type": "keyword"
+  },
+  "released_date": {
+    "type": "date",
+    "format": "iso8601"
+  },
+  "sex": {
+    "type": "keyword"
+  },
+  "state": {
+    "type": "keyword"
+  },
+  "symptom_onset_date": {
+    "type": "date",
+    "format": "iso8601"
+  }
+}
+```
+
+### Pie Chart - 확진자 성별
+
+![Pie Chart - 확진자 성별](gender.png)
+
+#### Bucket
+  * Aggregation : Terms
+  * Field : sex
+  * Show missing values : enable
+
+
+### Horizontal Bar Chart - 연령대 별 확진자 수
+
+![Horizontal Bar Chart - 연령대 별 확진자 수](age.png)
+
+#### Bucket
+* X-axis
+  * Aggregation : `Range`
+  * Field : `birty_year`
+  * 0-1940 / 1940-1960 / 1960-1980 / 1980-2000 / 2000-
+
+### Tag Cloud - 감염 경로
+
+![Tag Cloud - 감염 경로](infection-case.png)
+
+#### Buckets
+* Tags
+  * Aggregation : `terms`
+  * Field : `infection_case`
+  * Size : 20
+
