@@ -1,13 +1,11 @@
-# 2020-03-24 Virtual Meetup - Elastics Stack을 이용한 COVID19 대시보드 만들기
+# Create COVID19 Dashboard with Elastics Stack South Korea Cases
 
-[English Instructions](README-en.md)
+* Data Source - https://www.kaggle.com/kimjihoo/coronavirusdataset
 
-* 데이터 다운로드 - https://www.kaggle.com/kimjihoo/coronavirusdataset
-
-## covid19-kr-time-province
-
-* Kibana 의 파일 업로드 기능 이용.
-* Create Index pattern 체크 해제
+## TimeProvince.csv
+* Use Data Visualizer for index.
+* Index Name : `covid19-kr-time-province`
+* uncheck Create Index pattern
 * Mappings
 ```
 {
@@ -36,13 +34,13 @@
 }
 ```
 
-### 지역정보 시각화 준비
+### Prepare for Map Visualzations
 
-#### province 필드를 Elastic Map Service 에서 사용하는 값으로 변환
+#### Convert province field value into values used in Elastic Map Service
 
 Elastic Map Service : https://maps.elastic.co/#file/south_korea_provinces
 
-* south-korea-province 인덱스 생성
+* Create Index : `south-korea-province`
 ```
 PUT south-korea-province
 {
@@ -66,9 +64,9 @@ PUT south-korea-province
 }
 ```
 
-* south-korea-province 인덱스에 값 입력.
-  * covid19-name : TimeProvince.csv 파일의 province 필드 값
-  * ems-name { en, kr} : Elastic Map Service 의 South Korea Provinces 맵에 매칭되는 값
+* Insert docments into `south-korea-province` index, suing Bulk API
+  * `covid19-name` : value of province field from TimeProvince.csv file.
+  * `ems-name { en, kr}` : values defined in Elastic Map Service - South Korea Provinces
 ```
 POST south-korea-province/_bulk
 {"index":{"_id":"KR-26"}}
@@ -107,9 +105,9 @@ POST south-korea-province/_bulk
 {"covid19-name":"Ulsan","ems-name":{"en":"Ulsan","kr":"울산광역시"}}
 ```
 
-#### 색인시 데이터 확장을 위한 enrich pipeline 생성
+#### Create enrich ingest pipeline
 
-* _enrich policy 생성 및 활성
+* _enrich policy
 ```
 PUT _enrich/policy/covid19-province
 {
@@ -125,7 +123,7 @@ PUT _enrich/policy/covid19-province
 POST _enrich/policy/covid19-province/_execute
 ```
 
-* Enrich Ingest Pipeline 생성
+* Ingest Pipeline
 ```
 PUT _ingest/pipeline/covid19-province-convert
 {
@@ -143,7 +141,7 @@ PUT _ingest/pipeline/covid19-province-convert
 }
 ```
 
-* Enrich 프로세서를 적용해서 인덱스 값 업데이트
+* Update index with enrich processor
 ```
 PUT covid19-kr-time-province/_mapping
 {
@@ -171,16 +169,16 @@ PUT covid19-kr-time-province/_mapping
 POST covid19-kr-time-province/_update_by_query?pipeline=covid19-province-convert
 ```
 
-<!-- 전부 리셋하려면 아래 명령 순서대로 실행
+<!-- to reset all, run follow commands in order
 DELETE covid19-kr-time-province
 DELETE _ingest/pipeline/covid19-province-convert
 DELETE _enrich/policy/covid19-province
 DELETE south-korea-province
 -->
 
-### Area Chart - 시간대별 지역별 확진자
+### Area Chart - Timeseriesd confirmed per provinces
 
-![Area Chart - 시간대별 지역별 확진자](time-province.png)
+![Area Chart - Timeseriesd confirmed per provinces](time-province.png)
 
 #### Matrics
 * Y-axis
@@ -196,9 +194,9 @@ DELETE south-korea-province
   * Field : `ems.ems-names.kr(en)`
   * Size : 20
 
-### Line Chart - 시간대별 확진 / 완치 / 사망자
+### Line Chart - Timeseries Confirmed / Released / Deceased
 
-![Line Chart - 시간대별 확진 완치 사망자](time-status.png)
+![Line Chart - Timeseries Confirmed Released Deceased](time-status.png)
 
 #### Buckets 
 * X-axis
@@ -207,55 +205,56 @@ DELETE south-korea-province
 
 #### Matrics
 * Y-axis
-  * Aggregation : `Max` / Field : `Confirmed` / Custom Label : 전체 확진자
+  * Aggregation : `Max` / Field : `Confirmed` / Custom Label : Total Confirmed
 * Add Y-axis
-  * Aggregation : `Max` / Field : `Released` / Custom Label : 전체 완치자
+  * Aggregation : `Max` / Field : `Released` / Custom Label : Total Released
 * Add Y-axis
-  * Aggregation : `Max` / Field : `Deceased` / Custom Label : 전체 사망자
+  * Aggregation : `Max` / Field : `Deceased` / Custom Label : Total Deceased
 
 * Add Y-axis
-  * Pipeline Aggregation : `Derivative` / Metric : 전체 확진자 / Custom Label : 일별 확진자
+  * Pipeline Aggregation : `Derivative` / Metric : Total Confirmed / Custom Label : Daily Confirmed
 * Add Y-axis
-  * Pipeline Aggregation : `Derivative` / Metric : 전체 완치자 / Custom Label : 일별 완치자
+  * Pipeline Aggregation : `Derivative` / Metric : Total Released / Custom Label : Daily Released
 * Add Y-axis
-  * Pipeline Aggregation : `Derivative` / Metric : 전체 사망자 / Custom Label : 일별 사망자
+  * Pipeline Aggregation : `Derivative` / Metric : Total Deceased / Custom Label : Daily Deceased
 
 #### Metrics & axes
 
 * Y-axes -> +
   * RightAxis-1
 
-* Metrics - 전체 확진자 / 전체 완치자 / 전체 사망자
+* Metrics - Total Confirmed / Total Released / Total Deceased
   * Line mode : `Smoothened`
   * Show dots : disable
 
-* Metrics - 일별 확진자 / 일별 완치자 / 일별 사망자
+* Metrics - Daily Confirmed / Daily Released / Daily Deceased
   * Value axis : `RightAxis-1`
   * Chart type : `Bar`
 
-### Maps - 지역별 확진자
+### Maps - Confirmed regions
 
-> Timepicker 를 데이터가 있는 날짜로 조정
+> Remember to put Timepicker in valid dates.
 
-![Maps - 지역별 확진자](map-confirm.png)
+![Maps - Confirmed regions](map-confirm.png)
 
 * Add Layer : EMS Boundaries
   * Layer : South Korea Provinces
-* Tooltip Fields : `name(ko)`
+* Tooltip Fields : `name(en)`
 * Term Joins
-  * Left field : `name(ko)`
+  * Left field : `name(en)`
   * Right Source : covid19-kr-time-province
-  * Right field : `ems.ems-name.kr`
+  * Right field : `ems.ems-name.en`
   * and use metric
     * Aggregation : Max
     * Field : Confirmed
+    * Custom Label : Confirmed
 * Layer Style
-  * Fill color : By value : 확진자수
-  * Border color : 검은색이나 적당한 색
+  * Fill color : By value : Confirmed
+  * Border color : if needed
 
-### Metric - 전체 확진 / 완치 / 사망 수
+### Metric - Total Confirmed / released / deceased
 
-![Metric - 전체 확진 / 완치 / 사망 수](metrics.png)
+![Metric - Total Confirmed released deceased](metrics.png)
 
 * Aggregation : `Max Bucket`
 * Bucket : 
@@ -266,15 +265,14 @@ DELETE south-korea-province
   * Aggregation : `Sum`
   * Field : `confirmed`
 
-같은 내용으로 `released`, `deceased` 추가.
+iterate with `released`, `deceased`.
 
 
-## covid19-kr-patient-info
+## PatientInfo.csv
 
-> 전체 확진자의 데이터가 있지 않음. 데이터가 정확하지 않으니 Kibana 시각화 방법에 초점을 맞출 것.
-
-* Kibana 의 파일 업로드 기능 이용 : `PatientInfo.csv`
-* Create Index pattern 체크 해제
+> Notice : This file does not contains full numbers of pationts.
+* Use Data Visualizer for index.
+* Index Name : `covid19-kr-patient-info`
 * Mappings
 ```
 {
@@ -339,9 +337,9 @@ DELETE south-korea-province
 }
 ```
 
-### Pie Chart - 확진자 성별
+### Pie Chart - By Gender
 
-![Pie Chart - 확진자 성별](gender.png)
+![Pie Chart - Gender of patients](gender.png)
 
 #### Bucket
   * Aggregation : Terms
@@ -349,9 +347,9 @@ DELETE south-korea-province
   * Show missing values : enable
 
 
-### Horizontal Bar Chart - 연령대 별 확진자 수
+### Horizontal Bar Chart - By ages
 
-![Horizontal Bar Chart - 연령대 별 확진자 수](age.png)
+![Horizontal Bar Chart - By ages](age.png)
 
 #### Bucket
 * X-axis
@@ -359,9 +357,9 @@ DELETE south-korea-province
   * Field : `birty_year`
   * 0-1940 / 1940-1960 / 1960-1980 / 1980-2000 / 2000-
 
-### Tag Cloud - 감염 경로
+### Tag Cloud - Infection Cases
 
-![Tag Cloud - 감염 경로](infection-case.png)
+![Tag Cloud - Infection Cases](infection-case.png)
 
 #### Buckets
 * Tags
@@ -369,10 +367,12 @@ DELETE south-korea-province
   * Field : `infection_case`
   * Size : 20
 
-## covid19-kr-patient-route
 
-* Kibana 의 파일 업로드 기능 이용 : `PatientInfo.csv`
-* Create Index pattern 체크 해제
+## PatientInfo.csv
+
+* Use Data Visualizer for index.
+* Index Name : `covid19-kr-patient-route`
+* uncheck Create Index pattern
 * Mappings
 ```
 {
@@ -401,7 +401,7 @@ DELETE south-korea-province
 }
 ```
 
-pipeline
+* pipeline
 ```
 {
   "description": "Ingest pipeline created by file structure finder",
@@ -441,18 +441,18 @@ pipeline
 }
 ```
 
-### Maps - 확진자 방문지
+### Maps - Routes
 
-![Maps - 확진자 방문지](map-route.png)
+![Maps - Routes](map-route.png)
 
 * Add Layer : Documents
 * Tooltip Fields : `date`, `global_num`
 * Layer Style : Icon : embassy
 * Fill Color : by Value : `date`
 
-### 다른 맵과 쿼리 연동되도록 ems 필드 추가
+### Apply EMS fields to make queryable with other visualizations
 
-* Enrich 프로세서를 적용해서 인덱스 값 업데이트
+* Update index with enrich processor.
 ```
 PUT covid19-kr-patient-route/_mapping
 {
