@@ -7,7 +7,7 @@
     "elastic-demo": "1to4_convert.js"
   },
   "dependencies": {
-    "csv-parse": "^1.0.0"
+    "csv-parse": "^4.4.6"
   },
   "devDependencies": {},
   "scripts": {
